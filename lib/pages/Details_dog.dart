@@ -1,7 +1,5 @@
 import 'dart:convert';
-import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -16,11 +14,41 @@ class DetailsDog extends StatefulWidget {
 class _DetailsDogState extends State<DetailsDog> {
   List<String> picturesUrl = List();
   List<dynamic> responseBreedPics = List();
+  ScrollController _scrollController = ScrollController();
+  bool isLoading = false;
+  List<String> tempList = List(); // = picturesUrl.sublist(0,5);
+  int _listOffset = 0;
+  int _listLimit = 10;
 
   @override
   void initState() {
     super.initState();
     getBreedsPic(widget.dogBreed);
+    tempList.add('0');
+    _scrollController.addListener(_scrollListener);
+  }
+
+  _scrollListener() {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
+      setState(() {
+        isLoading = true;
+        _listLimit += 5;
+        _listOffset = _listLimit + 1;
+
+        tempList
+          ..addAll(
+              List<String>.from(picturesUrl.sublist(_listOffset, _listLimit)));
+
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -38,17 +66,27 @@ class _DetailsDogState extends State<DetailsDog> {
         body: Container(
             padding: EdgeInsets.all(16),
             child: ListView.builder(
-                itemCount: picturesUrl.length,
+                controller: _scrollController,
+                itemCount: picturesUrl.length + 1,
                 itemBuilder: (BuildContext context, int index) {
-                  return Card(
-                    child: Image.network(picturesUrl[index]),
-                  );
+                  if (index == picturesUrl.length) {
+                    return _buildProgressIndicator();
+                  } else {
+                    return Card(
+                      child: Image.network(picturesUrl[index]),
+                    );
+                  }
                 })));
   }
 
   Future getBreedsPic(String breed) async {
+    if (!isLoading) {
+      setState(() {
+        isLoading = true;
+      });
+    }
     http.Response response =
-        await http.get('https://dog.ceo/api/breed/${breed}/images');
+        await http.get('https://dog.ceo/api/breed/$breed/images');
     if (response.statusCode == 200) {
       setState(() {
         responseBreedPics = (json.decode(response.body)['message']);
@@ -62,15 +100,23 @@ class _DetailsDogState extends State<DetailsDog> {
       picturesUrl.add(v);
     });
     print(picturesUrl.length);
-
   }
 
-  //only works for random images...
-  fetchTen() {
-    for (int i = 0; i < 10; i++) {
-      getBreedsPic(widget.dogBreed);
-    }
+  Widget _buildProgressIndicator() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        child: Center(
+          child: Opacity(
+            opacity: isLoading ? 1.0 : 00,
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      ),
+    );
   }
+
+
 }
 
 class ShowError extends StatelessWidget {
