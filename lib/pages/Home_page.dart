@@ -1,18 +1,26 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:data_connection_checker/data_connection_checker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
 
 import 'Details_dog.dart';
 
 // ignore: must_be_immutable
-class HomePage extends StatelessWidget {
-  Map<String, dynamic> responseDataBreeds = Map();
-  Map<String, dynamic> responseDataBreedRandomPicture = Map();
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
 
+class _HomePageState extends State<HomePage> {
+  Map<String, dynamic> responseDataBreeds = Map();
+
+  Map<String, dynamic> responseDataBreedRandomPicture = Map();
+  bool internetState=false;
   String breed = '';
+
   List<String> breedList = List();
+
   List<String> breedImagesUrl = List();
 
   final String urlRequestDogBreeds = 'https://dog.ceo/api/breeds/list/all';
@@ -20,22 +28,73 @@ class HomePage extends StatelessWidget {
   final String urlRequestDogRandomPicture =
       'https://dog.ceo/api/breeds/image/random';
 
-  //do a request to get all dogs breeds and wait for response
+  var listener;
+
+
+
+  @override
+  void initState() {
+    super.initState();
+    hasInternet();
+  }
+
+
+  @override
+  void dispose() {
+    super.dispose();
+    listener.cancel();
+  }
+
   Future<Map> getDogBreeds() async {
+   // hasInternet();
+    print('$internetState  getting dogs..');
     http.Response response = await http.get(urlRequestDogBreeds);
-    if(response.statusCode==200){
-    responseDataBreeds = json.decode(response.body)['message'];
-    responseDataBreeds.forEach((k, v) {
-
-      breedList.add('$k'.toUpperCase());
-
-    });}
-
-    else{ShowError();}
+    if (response.statusCode == 200) {
+      responseDataBreeds = json.decode(response.body)['message'];
+      responseDataBreeds.forEach((k, v) {
+        breedList.add('$k'.toUpperCase());
+      });
+    } else {
+      ShowError();
+    }
     return responseDataBreeds;
   }
 
-//do a request to get a random picture for the specific breed
+  //checa se existe conexÃƒÂ£o com a internet
+  Future hasInternet() async {
+    // Simple check to see if we have internet
+    print("The statement 'this machine is connected to the Internet' is: ");
+    print(await DataConnectionChecker().hasConnection);
+    // returns a bool
+
+    // We can also get an enum value instead of a bool
+    print("Current status: ${await DataConnectionChecker().connectionStatus}");
+    // prints either DataConnectionStatus.connected
+    // or DataConnectionStatus.disconnected
+
+    // This returns the last results from the last call
+    // to either hasConnection or connectionStatus
+    print("Last results: ${DataConnectionChecker().lastTryResults}");
+
+    // actively listen for status updates
+    // this will cause DataConnectionChecker to check periodically
+    // with the interval specified in DataConnectionChecker().checkInterval
+    // until listener.cancel() is called
+    listener = DataConnectionChecker().onStatusChange.listen((status) {
+      switch (status) {
+        case DataConnectionStatus.connected:
+          print('Data connection is available.');
+          break;
+        case DataConnectionStatus.disconnected:
+          print('You are disconnected from the internet.');
+          mostrarAlerta();
+          break;
+      }
+    });
+      return await DataConnectionChecker().connectionStatus;
+
+  }
+
   Future<Map> getDogRandomPictures(String dogBreed) async {
     String urlRequestDogBreedPicture =
         'https://dog.ceo/api/breed/$dogBreed/images/random';
@@ -119,11 +178,45 @@ class HomePage extends StatelessWidget {
     );
   }
 
+
+
   gotoPagina(BuildContext context, Widget pagina) {
     Route route = MaterialPageRoute(builder: (context) => pagina);
     Navigator.push(context, route);
   }
+
+   mostrarAlerta(){
+
+   return showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text('Aviso'),
+          content: Text('Verifique sua conexão com a internet!'),
+          actions: <Widget>[
+            Container(
+              decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.all(Radius.circular(16))),
+              child: FlatButton(
+                onPressed: () {
+                  exit(0);
+                },
+                child: Text(
+                  'OK',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+            )
+          ],
+          elevation: 16,
+          backgroundColor: Colors.white,
+          //shape: CircleBorder(),
+        ));
+  }
 }
+
+
 
 class ShowError extends StatelessWidget {
   @override

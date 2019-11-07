@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -19,12 +20,17 @@ class _DetailsDogState extends State<DetailsDog> {
   List<String> tempList = List(); // = picturesUrl.sublist(0,5);
   int _listOffset = 0;
   int _listLimit = 10;
+  bool internetState=false;
+
+
+
 
   @override
   void initState() {
     super.initState();
+    hasInternet();
     getBreedsPic(widget.dogBreed);
-    tempList.add('0');
+    
     _scrollController.addListener(_scrollListener);
   }
 
@@ -53,6 +59,8 @@ class _DetailsDogState extends State<DetailsDog> {
 
   @override
   Widget build(BuildContext context) {
+
+   
     return Scaffold(
         appBar: AppBar(
           title: Text(
@@ -79,7 +87,65 @@ class _DetailsDogState extends State<DetailsDog> {
                 })));
   }
 
+     //checa se existe conexÃƒÂ£o com a internet
+	Future hasInternet() async {
+		bool connected;
+		try {
+			final result = await InternetAddress.lookup('google.com');
+			if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+				// print('connected');
+				connected = true;
+        internetState=true;
+			}
+		} on SocketException catch (_) {
+			//print('not connected');
+			connected = false;
+		}
+		print("Internet = $connected");
+
+mostraAlerta();
+
+   
+	
+	}
+
+  void mostraAlerta(){
+if(!internetState){
+     showDialog (
+      context: context,
+      builder: (_)=>AlertDialog(
+      title: Text('Aviso'),
+      content: Text('Verifique sua conexão com a internet!'),
+      actions: <Widget>[
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.all(Radius.circular(16))),
+          child: FlatButton(
+            
+            onPressed: (){exit(0);},
+            child: Text('OK',style: TextStyle(
+              color: Colors.white,
+              
+              fontWeight: FontWeight.bold),),
+          ),
+        )
+      ],
+      elevation: 16,
+      backgroundColor: Colors.white,
+      //shape: CircleBorder(),
+      )
+        
+      
+      
+    );
+   }
+
+  }
+	
+
   Future getBreedsPic(String breed) async {
+    //mostraAlerta();
     if (!isLoading) {
       setState(() {
         isLoading = true;
@@ -91,7 +157,8 @@ class _DetailsDogState extends State<DetailsDog> {
       setState(() {
         responseBreedPics = (json.decode(response.body)['message']);
       });
-      for (int x = 0; x < picturesUrl.length; x++) print(picturesUrl[x]);
+      //for (int x = 0; x < picturesUrl.length; x++) print(picturesUrl[x]);
+
     } else {
       throw Exception('Erro carregando fotos');
     }
@@ -99,8 +166,14 @@ class _DetailsDogState extends State<DetailsDog> {
     responseBreedPics.forEach((v) {
       picturesUrl.add(v);
     });
+
+    setState(() {
+      isLoading = false;
+    });
     print(picturesUrl.length);
   }
+
+  
 
   Widget _buildProgressIndicator() {
     return Padding(
