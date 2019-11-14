@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:data_connection_checker/data_connection_checker.dart';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -60,7 +61,9 @@ class _HomePageState extends State<HomePage> {
     return responseDataBreeds;
   }
 
-  //checa se existe conexÃƒÂ£o com a internet
+
+
+  //check if has a valid internet connection
   Future hasInternet() async {
     // Simple check to see if we have internet
     print("The statement 'this machine is connected to the Internet' is: ");
@@ -101,8 +104,7 @@ class _HomePageState extends State<HomePage> {
     http.Response response = await http.get(urlRequestDogBreedPicture);
     responseDataBreedRandomPicture = json.decode(response.body);
     breedImagesUrl.add(responseDataBreedRandomPicture.values.toString());
-    //print(responseDataBreedRandomPicture.values.toString());
-    //print(breedImagesUrl.length);
+
     return responseDataBreedRandomPicture;
   }
 

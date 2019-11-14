@@ -15,11 +15,12 @@ class DetailsDog extends StatefulWidget {
 class _DetailsDogState extends State<DetailsDog> {
   List<String> picturesUrl = List();
   List<dynamic> responseBreedPics = List();
-  ScrollController _scrollController = ScrollController();
+ 
   bool isLoading = false;
   List<String> tempList = List(); // = picturesUrl.sublist(0,5);
-  int _listOffset = 0;
-  int _listLimit = 10;
+  int _indexActual = 0;
+  int _itemsPerPage = 10;
+  bool loaded = false;
   bool internetState=false;
 
 
@@ -28,34 +29,14 @@ class _DetailsDogState extends State<DetailsDog> {
   @override
   void initState() {
     super.initState();
-    hasInternet();
-    getBreedsPic(widget.dogBreed);
-    
-    _scrollController.addListener(_scrollListener);
-  }
-
-  _scrollListener() {
-    if (_scrollController.position.pixels ==
-        _scrollController.position.maxScrollExtent) {
-      setState(() {
-        isLoading = true;
-        _listLimit += 5;
-        _listOffset = _listLimit + 1;
-
-        tempList
-          ..addAll(
-              List<String>.from(picturesUrl.sublist(_listOffset, _listLimit)));
-
-        isLoading = false;
-      });
+    hasInternet();//checking internet connection
+    getBreedsPic(widget.dogBreed);//loading pictures for this breed
+     
+      
     }
-  }
+  
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -74,20 +55,50 @@ class _DetailsDogState extends State<DetailsDog> {
         body: Container(
             padding: EdgeInsets.all(16),
             child: ListView.builder(
-                controller: _scrollController,
-                itemCount: picturesUrl.length + 1,
+                
+                itemCount: (_indexActual <= picturesUrl.length) ? tempList.length + 1 : tempList.length,//picturesUrl.length + 1,
                 itemBuilder: (BuildContext context, int index) {
-                  if (index == picturesUrl.length) {
-                    return _buildProgressIndicator();
-                  } else {
-                    return Card(
-                      child: Image.network(picturesUrl[index]),
+                 print("Indice = $index");       
+                 print(tempList.length); 
+                 print(picturesUrl.length);  
+                // print(_indexActual);      
+                  return (index == tempList.length)?
+
+                     Container(
+                       height: 50,
+                      color: Colors.greenAccent,
+                      child:  Center(
+                        child: (tempList.length==0)? Text("Carregando fotos...",
+                        style:TextStyle(fontSize: 20,)):
+                        (tempList.length==picturesUrl.length)?Text('Final do arquivo',
+                            style:TextStyle(fontSize: 20,)):
+                         FlatButton(
+                          child: Text("Clic aqui para mais fotos...",
+                              style:TextStyle(fontSize: 20,)),
+                          onPressed: () {
+                            
+                            setState(() {
+                              if((_indexActual + _itemsPerPage)> picturesUrl.length) {
+                                tempList.addAll(
+                                    picturesUrl.getRange(_indexActual, picturesUrl.length));
+                              } else {
+                               tempList.addAll(
+                                    picturesUrl.getRange(_indexActual,_indexActual + _itemsPerPage));
+                              }
+                              _indexActual = _indexActual + _itemsPerPage;
+                            });
+                          },
+                        ),
+                      ),
+                    ):
+                     Card(
+                      child: Image.network(tempList[index]),
                     );
-                  }
+                  
                 })));
   }
 
-     //checa se existe conexÃƒÂ£o com a internet
+     //check if has a valid internet connection
 	Future hasInternet() async {
 		bool connected;
 		try {
@@ -145,7 +156,7 @@ if(!internetState){
 	
 
   Future getBreedsPic(String breed) async {
-    //mostraAlerta();
+
     if (!isLoading) {
       setState(() {
         isLoading = true;
@@ -157,40 +168,50 @@ if(!internetState){
       setState(() {
         responseBreedPics = (json.decode(response.body)['message']);
       });
-      //for (int x = 0; x < picturesUrl.length; x++) print(picturesUrl[x]);
 
     } else {
       throw Exception('Erro carregando fotos');
     }
 
     responseBreedPics.forEach((v) {
-      picturesUrl.add(v);
+      picturesUrl.add(v);//has all pictures for this breed
+      
     });
 
-    setState(() {
-      isLoading = false;
+    setState(() {//loading the first ten pictures
+      if (picturesUrl.length < 10 ){
+        tempList.addAll(picturesUrl.getRange(_indexActual,picturesUrl.length));
+         _indexActual = _indexActual + picturesUrl.length;
+        }else{
+        tempList
+          ..addAll(picturesUrl.getRange(_indexActual, _indexActual + _itemsPerPage));
+        _indexActual = _indexActual + _itemsPerPage;
+     
+      isLoading = false;}
     });
     print(picturesUrl.length);
   }
 
-  
 
-  Widget _buildProgressIndicator() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Container(
-        child: Center(
-          child: Opacity(
-            opacity: isLoading ? 1.0 : 00,
-            child: CircularProgressIndicator(),
-          ),
-        ),
-      ),
-    );
-  }
+
+//  Widget _buildProgressIndicator() {
+//    return Padding(
+//      padding: const EdgeInsets.all(8.0),
+//      child: Container(
+//        child: Center(
+//          child: Opacity(
+//            opacity: isLoading ? 1.0 : 00,
+//            child: CircularProgressIndicator(),
+//          ),
+//        ),
+//      ),
+//    );
+//  }
 
 
 }
+
+
 
 class ShowError extends StatelessWidget {
   @override
