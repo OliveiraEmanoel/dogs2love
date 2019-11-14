@@ -52,7 +52,7 @@ flutter:
   #  - images/a_dot_burr.jpeg
   #  - images/a_dot_ham.jpeg
   assets:
-   - assets/images/logo.png
+   - assets/images/android-logout-icon-4.jpg
    - assets/images/logo2.png
    - assets/images/pet_friendly.png
 

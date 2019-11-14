@@ -17,7 +17,7 @@ class _HomePageState extends State<HomePage> {
   Map<String, dynamic> responseDataBreeds = Map();
 
   Map<String, dynamic> responseDataBreedRandomPicture = Map();
-  bool internetState=false;
+  bool internetState = false;
   String breed = '';
 
   List<String> breedList = List();
@@ -31,14 +31,11 @@ class _HomePageState extends State<HomePage> {
 
   var listener;
 
-
-
   @override
   void initState() {
     super.initState();
     hasInternet();
   }
-
 
   @override
   void dispose() {
@@ -47,7 +44,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<Map> getDogBreeds() async {
-   // hasInternet();
+    // hasInternet();
     print('$internetState  getting dogs..');
     http.Response response = await http.get(urlRequestDogBreeds);
     if (response.statusCode == 200) {
@@ -60,8 +57,6 @@ class _HomePageState extends State<HomePage> {
     }
     return responseDataBreeds;
   }
-
-
 
   //check if has a valid internet connection
   Future hasInternet() async {
@@ -94,8 +89,7 @@ class _HomePageState extends State<HomePage> {
           break;
       }
     });
-      return await DataConnectionChecker().connectionStatus;
-
+    return await DataConnectionChecker().connectionStatus;
   }
 
   Future<Map> getDogRandomPictures(String dogBreed) async {
@@ -129,11 +123,8 @@ class _HomePageState extends State<HomePage> {
               onPressed: () {
                 exit(0);
               },
-              icon: Icon(
-                Icons.exit_to_app,
-                color: Colors.white,
-                size: 30,
-              ),
+              icon: Image.asset(
+                  'assets/images/android-logout-icon-4.jpg',color: Colors.white,), //Icon(Icons.exit_to_app,color: Colors.white,size: 30,
             )
           ],
         ),
@@ -180,45 +171,40 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
-
   gotoPagina(BuildContext context, Widget pagina) {
     Route route = MaterialPageRoute(builder: (context) => pagina);
     Navigator.push(context, route);
   }
 
-   mostrarAlerta(){
-
-   return showDialog(
+  mostrarAlerta() {
+    return showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          title: Text('Aviso'),
-          content: Text('Verifique sua conexão com a internet!'),
-          actions: <Widget>[
-            Container(
-              decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.all(Radius.circular(16))),
-              child: FlatButton(
-                onPressed: () {
-                  exit(0);
-                },
-                child: Text(
-                  'OK',
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              ),
-            )
-          ],
-          elevation: 16,
-          backgroundColor: Colors.white,
-          //shape: CircleBorder(),
-        ));
+              title: Text('Aviso'),
+              content: Text('Verifique sua conexão com a internet!'),
+              actions: <Widget>[
+                Container(
+                  decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.all(Radius.circular(16))),
+                  child: FlatButton(
+                    onPressed: () {
+                      exit(0);
+                    },
+                    child: Text(
+                      'OK',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                )
+              ],
+              elevation: 16,
+              backgroundColor: Colors.white,
+              //shape: CircleBorder(),
+            ));
   }
 }
-
-
 
 class ShowError extends StatelessWidget {
   @override
